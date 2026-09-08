@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seminar Grader</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 1.8rem;
+      color: #1a1a2e;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 40px;
+      font-size: 0.95rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* ── Upload card ── */
+    .upload-card {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 30px;
+    }
+
+    .upload-area {
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      padding: 40px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 20px;
+    }
+
+    .upload-area:hover {
+      border-color: #4f46e5;
+      background: #f8f7ff;
+    }
+
+    .upload-area.dragover {
+      border-color: #4f46e5;
+      background: #f8f7ff;
+    }
+
+    .upload-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+
+    .upload-area p {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .upload-area p span {
+      color: #4f46e5;
+      font-weight: 600;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    #fileName {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #4f46e5;
+      font-weight: 500;
+      min-height: 20px;
+    }
+
+    .btn {
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 14px 40px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background: #4338ca;
+    }
+
+    .btn:disabled {
+      background: #a5a5a5;
+      cursor: not-allowed;
+    }
+
+    /* ── Loader ── */
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 30px;
+      color: #666;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #4f46e5;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Results ── */
+    .results {
+      display: none;
+    }
+
+    .final-score-card {
+      background: #1a1a2e;
+      color: white;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+
+    .final-score-card .label {
+      font-size: 0.9rem;
+      opacity: 0.7;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .final-score-card .score {
+      font-size: 3.5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .final-score-card .max {
+      font-size: 1.2rem;
+      opacity: 0.6;
+    }
+
+    .final-score-card .overall-feedback {
+      margin-top: 16px;
+      font-size: 0.95rem;
+      opacity: 0.85;
+      line-height: 1.6;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      padding-top: 16px;
+    }
+
+    /* ── Section cards ── */
+    .section-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .section-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .section-card .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .section-card .section-score {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .section-card .section-max {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 3px;
+      margin-bottom: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: #4f46e5;
+      transition: width 0.6s ease;
+    }
+
+    .section-card .section-feedback {
+      font-size: 0.85rem;
+      color: #555;
+      line-height: 1.5;
+    }
+
+    /* ── Multipliers card ── */
+    .multipliers-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .multipliers-card h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .multiplier-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.9rem;
+    }
+
+    .multiplier-row:last-child {
+      border-bottom: none;
+    }
+
+    .multiplier-label {
+      color: #555;
+    }
+
+    .multiplier-value {
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-red {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .badge-green {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    /* ── Issues card ── */
+    .issues-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .issues-card h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .issue-tag {
+      display: inline-block;
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffc107;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      margin: 4px;
+    }
+
+    /* ── Error ── */
+    .error {
+      display: none;
+      background: #fee2e2;
+      color: #dc2626;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .section-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Seminar Grader</h1>
+  <p class="subtitle">Upload a seminar paper (.pdf or .txt) and receive automated feedback</p>
+
+  <!-- Upload -->
+  <div class="upload-card">
+    <div class="upload-area" id="uploadArea">
+      <div class="upload-icon">📄</div>
+      <p>Drag & drop your paper here or <span>browse</span></p>
+      <p style="margin-top:6px; font-size:0.82rem;">Supported: .pdf, .txt</p>
+      <input type="file" id="fileInput" accept=".pdf,.txt">
+    </div>
+    <div id="fileName"></div>
+    <button class="btn" id="gradeBtn" onclick="uploadFile()" disabled>
+      Grade Paper
+    </button>
+    <div class="error" id="error">Something went wrong. Please try again.</div>
+  </div>
+
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <p>Analyzing paper structure and grading...</p>
+    <p style="font-size:0.85rem; margin-top:6px; opacity:0.7">This takes about 15-20 seconds</p>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <!-- Final score -->
+    <div class="final-score-card">
+      <div class="label">Final Score</div>
+      <div class="score">
+        <span id="finalScore">-</span>
+        <span class="max"> / 70</span>
+      </div>
+      <div class="overall-feedback" id="overallFeedback"></div>
+    </div>
+
+    <!-- Section scores -->
+    <div class="section-cards">
+      <div class="section-card">
+        <div class="section-title">Introduction</div>
+        <div class="section-score" id="introScore">-</div>
+        <div class="section-max">out of 10</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="introBar" style="width:0%"></div>
+        </div>
+        <div class="section-feedback" id="introFeedback"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-title">Body</div>
+        <div class="section-score" id="bodyScore">-</div>
+        <div class="section-max">out of 35</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="bodyBar" style="width:0%"></div>
+        </div>
+        <div class="section-feedback" id="bodyFeedback"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-title">Conclusion</div>
+        <div class="section-score" id="conclusionScore">-</div>
+        <div class="section-max">out of 25</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="conclusionBar" style="width:0%"></div>
+        </div>
+        <div class="section-feedback" id="conclusionFeedback"></div>
+      </div>
+    </div>
+
+    <!-- Multipliers -->
+    <div class="multipliers-card">
+      <h3>Score Multipliers</h3>
+      <div class="multiplier-row">
+        <span class="multiplier-label">Raw score (intro + body + conclusion)</span>
+        <span class="multiplier-value" id="rawScore">-</span>
+      </div>
+      <div class="multiplier-row">
+        <span class="multiplier-label">Citation penalty</span>
+        <span class="multiplier-value" id="citationPenalty">-</span>
+      </div>
+      <div class="multiplier-row">
+        <span class="multiplier-label">Word count (<span id="wordCount">-</span> words)</span>
+        <span class="multiplier-value" id="wordCountFactor">-</span>
+      </div>
+      <div class="multiplier-row">
+        <span class="multiplier-label">Source count (<span id="sourceCount">-</span> sources)</span>
+        <span class="multiplier-value" id="sourceFactor">-</span>
+      </div>
+    </div>
+
+    <!-- Structural issues -->
+    <div class="issues-card" id="issuesCard">
+      <h3>Structural Issues Detected</h3>
+      <div id="issuesTags"></div>
+    </div>
+
+    <!-- Grade another -->
+    <div style="text-align:center; margin-top: 10px; margin-bottom: 40px;">
+      <button class="btn" style="max-width:300px;" onclick="reset()">
+        Grade Another Paper
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const uploadArea = document.getElementById('uploadArea');
+  const fileInput  = document.getElementById('fileInput');
+  const gradeBtn   = document.getElementById('gradeBtn');
+  const fileNameEl = document.getElementById('fileName');
+  let selectedFile = null;
+
+  // Click to browse
+  uploadArea.addEventListener('click', () => fileInput.click());
+
+  // File selected
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) selectFile(fileInput.files[0]);
+  });
+
+  // Drag and drop
+  uploadArea.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) selectFile(e.dataTransfer.files[0]);
+  });
+
+  function selectFile(file) {
+    selectedFile = file;
+    fileNameEl.textContent = '📎 ' + file.name;
+    gradeBtn.disabled = false;
+  }
+
+  async function uploadFile() {
+    if (!selectedFile) return;
+
+    // Show loader
+    document.getElementById('loader').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+    gradeBtn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await fetch('/api/grade', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) throw new Error('Server error');
+
+      const data = await response.json();
+      renderResults(data);
+
+    } catch (err) {
+      document.getElementById('error').style.display = 'block';
+    } finally {
+      document.getElementById('loader').style.display = 'none';
+      gradeBtn.disabled = false;
+    }
+  }
+
+  function renderResults(data) {
+    // Final score
+    document.getElementById('finalScore').textContent     = data.finalScore;
+    document.getElementById('overallFeedback').textContent = data.overallFeedback;
+    document.getElementById('rawScore').textContent        = data.rawScore + ' / 70';
+
+    // Sections
+    document.getElementById('introScore').textContent    = data.intro.score;
+    document.getElementById('introFeedback').textContent = data.intro.feedback;
+    document.getElementById('introBar').style.width      = (data.intro.score / 10 * 100) + '%';
+
+    document.getElementById('bodyScore').textContent    = data.body.score;
+    document.getElementById('bodyFeedback').textContent = data.body.feedback;
+    document.getElementById('bodyBar').style.width      = (data.body.score / 35 * 100) + '%';
+
+    document.getElementById('conclusionScore').textContent    = data.conclusion.score;
+    document.getElementById('conclusionFeedback').textContent = data.conclusion.feedback;
+    document.getElementById('conclusionBar').style.width      = (data.conclusion.score / 25 * 100) + '%';
+
+    // Multipliers
+    const hasPenalty = data.citationPenalty;
+    document.getElementById('citationPenalty').innerHTML = hasPenalty
+            ? '<span class="badge badge-red">−30% applied</span>'
+            : '<span class="badge badge-green">No penalty</span>';
+
+    document.getElementById('wordCount').textContent      = data.wordCount;
+    document.getElementById('wordCountFactor').textContent = '×' + data.wordCountFactor;
+    document.getElementById('sourceCount').textContent    = data.sourceCount;
+    document.getElementById('sourceFactor').textContent   = '×' + data.sourceFactor;
+
+    // Structural issues
+    const tagsEl = document.getElementById('issuesTags');
+    if (data.structuralIssues && data.structuralIssues.length > 0) {
+      tagsEl.innerHTML = data.structuralIssues
+              .map(issue => `<span class="issue-tag">${issue.replaceAll('_', ' ')}</span>`)
+              .join('');
+      document.getElementById('issuesCard').style.display = 'block';
+    } else {
+      document.getElementById('issuesCard').style.display = 'none';
+    }
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function reset() {
+    selectedFile = null;
+    fileNameEl.textContent = '';
+    fileInput.value = '';
+    gradeBtn.disabled = true;
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>

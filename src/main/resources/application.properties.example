@@ -1,0 +1,14 @@
+# ── OpenRouter — chat (LLM #1 and LLM #2) ──────────────────
+openrouter.api-key=YOUR_OPENROUTER_API_KEY_HERE
+openai.chat.model=openai/gpt-4o
+
+# ── Cohere — embeddings ─────────────────────────────────────
+cohere.api-key=YOUR_COHERE_API_KEY_HERE
+cohere.embedding.model=embed-english-v3.0
+
+# ── File upload ─────────────────────────────────────────────
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+
+# ── RAG ─────────────────────────────────────────────────────
+app.rag.top-k=4
