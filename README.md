@@ -1,4 +1,4 @@
-# AI-Powered Seminar Evaluation Platform
+# LLM-based Seminar Evaluation Platform
 
 A Spring Boot application that automatically grades student seminar papers for a Computer Ethics course using a RAG (Retrieval-Augmented Generation) pipeline. Students upload a paper and receive a structured grade with section-level feedback, a final score out of 70, and a breakdown of all multipliers applied.
 
